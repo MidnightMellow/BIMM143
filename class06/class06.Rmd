@@ -103,7 +103,7 @@ rescale3(1:10, plot = TRUE)
 Install the **bio3d** package for sequence and structure analysis
 
 ```{r}
-install.packages("bio3d")
+#install.packages("bio3d")
 library(bio3d)
 
 s1 <- read.pdb("4AKE") # kinase with drug
