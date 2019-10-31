@@ -1,6 +1,6 @@
 ---
 title: "Class6 R Functions"
-output: html_document
+output: github_document
 ---
 
 
