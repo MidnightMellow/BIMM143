@@ -1,0 +1,92 @@
+---
+title: "class07(RMarkdown2)"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+x <- c( 1, 2, NA, 3, NA)
+y <- c(NA, 3, NA, 3, 4)
+```
+
+```{r}
+is.na(x)
+
+```
+
+```{r}
+which(is.na(x))
+```
+
+```{r}
+which(is.na(y))
+```
+
+```{r}
+sum(is.na(x) & is.na(y))
+```
+
+Now turn it into a fucntion
+
+```{r}
+both_na <- function(x,y){
+  sum(is.na(x) & is.na(y))
+}
+```
+
+```{r}
+x <- c(NA, NA, NA)
+y1 <- c( 1, NA, NA)
+y2 <- c( 1, NA, NA, NA)
+
+```
+
+```{r}
+both_na(x, y2)
+```
+
+
+
+```{r}
+x <- c(NA, NA, NA)
+y3 <- c( 1, NA, NA, NA, NA, NA, NA)
+both_na(x, y3)
+
+```
+```{r}
+length(x)
+length(y3)
+```
+ 
+Add a check for when inputs x and y are not the same length
+```{r}
+both_na2 <- function(x,y){
+  if(length(x) != length(y))
+    stop("Input x and y should be the same length")
+  sum(is.na(x) & is.na(y))
+}
+```
+
+```{r}
+both_na2(x, y2)
+```
+
+
+```{r}
+install.packages("ggplot2")
+
+```
+```{r}
+install.packages("tidyverse")
+```
+```{r}
+library("ggplot2")
+```
+
+
+
+

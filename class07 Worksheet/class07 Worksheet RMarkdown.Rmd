@@ -1,0 +1,49 @@
+---
+title: "class07 worksheet markdown"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# student 1
+stud1 <- c(100, 100, 100, 100, 100, 100, 100, 90)
+# student 2
+stud2 <- c(100, NA, 90, 90, 90, 90, 97, 80)
+```
+
+```{r}
+mean(stud1[- which.min(stud1)])
+```
+```{r}
+ mean (stud2 [-which.min(stud2)], na.rm = TRUE)
+```
+
+We have our working code not turn it into a first funcion
+```{r}
+grade <- function(x) {
+  if( any(is.na(x))) {
+    warning("Student is missing a homework")
+  }
+  mean( x[ -which.min(x)], na.rm = TRUE)
+}
+```
+
+```{r}
+url <- "https://tinyurl.com/gradeinput"
+hw <- read.csv(url, row.names = 1)
+```
+
+```{r}
+apply(hw, 1, grade)
+```
+
+
+
+
+
+
+
