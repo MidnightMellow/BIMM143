@@ -1,0 +1,51 @@
+---
+title: "class06_Worsheet_Hw_.proj"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r message=TRUE}
+# Install R package "bio3d" to easily visualize data and analyze through plots
+install.packages("bio3d", repos = "http://cran.us.r-project.org")
+
+# Load the package into the console so that it can be used
+library(bio3d)
+# Create function and access data 
+pdb_data <-function(x) {
+  p_struct <- read.pdb(x)
+  
+# Extract desired data on protein strucutre read and organized by read.pdb(x)
+  p_struct.chain <- trim.pdb(p_struct,chain="A",elety="CA")
+  
+# Isolate data on atomic information
+  p_struct.b <- p_struct.chain$atom$b
+  
+# Plot the two variables to determine the protein structure's stability
+  plot.bio3d(p_struct.b,sse <- p_struct.chain,type = "l",ylab="Bfactor", sse = sse)
+  
+
+}
+
+# Example of functionality
+pdb_data("4AKE")
+```
+
+
+
+
+
+
+
+
+
+
+
+
