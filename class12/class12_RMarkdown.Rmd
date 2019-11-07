@@ -1,0 +1,55 @@
+---
+title: "class12_Structural_Bioinformatics_RMarkdown"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Prep for docking
+
+We want to produce a protein-only PDB file and a drug only PDB file
+```{r}
+library(bio3d)
+
+# Download the PDB file
+get.pdb("1hsg")
+info <- get.pdb("1hsg")
+
+
+
+```
+
+For protein:
+```{r}
+pdb <- read.pdb(info)
+protein <- atom.select(pdb, "protein", value=TRUE)
+write.pdb(protein, file="1hsg_protein.pdb")
+```
+
+and for ligand:
+```{r}
+ligand <- atom.select(pdb, "ligand", value=TRUE)
+write.pdb(ligand, file="1hsg_ligand.pdb")
+```
+
+##Process our docking results
+
+```{r}
+library(bio3d)
+
+res<- read.pdb("all.pdbqt", multi=TRUE)
+
+write.pdb(res, "results.pdb")
+
+```
+
+```{r}
+res <- read.pdb("all.pdbqt", multi=TRUE)
+
+ori <- read.pdb("ligand.pdbqt")
+
+rmsd(ori, res)
+```
+
