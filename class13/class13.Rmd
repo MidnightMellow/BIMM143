@@ -1,0 +1,214 @@
+---
+title: "class13_RMarkdown"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.) Bioconductor and DESeq2 Setup
+
+```{r eval=FALSE}
+install.packages("BiocManager")
+BiocManager::install()
+BiocManager::install("DESeq2")
+
+```
+
+```{r}
+library(BiocManager)
+library(DESeq2)
+```
+
+# 2.) Import countData and colData
+
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+Have a peak...
+```{r}
+head(counts)
+```
+
+```{r}
+head(metadata)
+```
+
+How many genes do we have in this dataset?
+```{r}
+nrow(counts)
+```
+
+How any exps do we have?
+```{r}
+ncol(counts)
+```
+
+```{r}
+nrow(metadata)
+```
+
+# 3.) Toy Differential Gene Expression
+
+We want to know if there is a difference in expression values for all control (non-drug) vs treated (i.e. drug added cell lines).
+
+First step is to find which experiments were the control experiments and then get the average values across all control experiments. Then we will do the same for drug treated.
+
+```{r}
+control <- metadata[metadata[,"dex"]=="control",]
+control
+```
+
+Now calculate the mean values across these control columns of **countdata**
+```{r}
+control.mean <- rowSums(counts[,control$id])/length(control$id)
+names(control.mean) <-counts$ensgene
+```
+
+Now do the same for the treated
+
+```{r}
+treated <- metadata[metadata[,"dex"]=="treated",]
+treated
+```
+
+Now calculate the mean values across these treated columns of **countdata**
+```{r}
+treated.mean <- rowSums(counts[,treated$id])/length(treated$id)
+names(treated.mean) <-counts$ensgene
+```
+
+
+We will now combine our meancount data for bookkeeping purposes
+```{r}
+meancounts <- data.frame(control.mean, treated.mean)
+```
+
+Show the sum of the mean counts across all genes for each group
+```{r}
+colSums(meancounts)
+```
+
+Create a scatter plot showing the mean of the treated samples against the mean of the control samples. 
+
+```{r}
+plot.default(meancounts)
+```
+
+But the data is too clustered, so we need to take the log of each data showing the mean of the treated samples against the mean of the control samples
+
+```{r}
+plot.default(meancounts, log = "xy", ylab = "log Treated", xlab = "log Control")
+```
+
+We can find candidate differentially expressed genes by looking for genes with a large change between control and dex-treated samples. We usually look at the log2 of the fold change, because this has better mathematical properties. We will calculate the log2foldchange and add it to our **meancounts** data.frame and inspect the results.
+
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+There are a couple of “weird” results. Namely, the NaN (“not a number”“) and -Inf (negative infinity) results.
+
+The NaN is returned when you divide by zero and try to take the log. The -Inf is returned when you try to take the log of zero. It turns out that there are a lot of genes with zero expression. Let’s filter our data to remove these genes.
+
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[ -to.rm,]
+head(mycounts)
+```
+
+A common threshold used for calling something differentially expressed is a log2(FoldChange) of greater than 2 or less than -2. We filter the dataset both ways to see how many genes are up or down-regulated.
+
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+
+
+```
+
+Determine how many up and down regulated genes we have at the greater than 2 fc and less than -2 fc levels
+```{r}
+count(up.ind)
+count(down.ind)
+```
+
+```{r}
+head(mycounts[up.ind,])
+```
+
+#4.) Adding Annotation Data
+
+Our mycounts result table so far only contains the Ensembl gene IDs. However, alternative gene names and extra annotation are usually required for informative for interpretation.
+
+We can add annotation from a supplied CSV file, such as those available from ENSEMBLE or UCSC. The annotables_grch38.csv annotation table links the unambiguous Ensembl gene ID to other useful annotation like the gene symbol, full gene name, location, Entrez gene ID, etc.
+
+```{r}
+anno <- read.csv("annotables_grch38.csv")
+head(anno)
+```
+
+Ideally we want this annotation data mapped (or merged) with our mycounts data. The merge() function, which is one common way to do this.
+
+...............
+
+#5.) DESeq2 Analysis
+
+```{r}
+library(DESeq2)
+citation("DESeq2")
+```
+
+We will use the DESeqDataSetFromMatrix() function to build the required DESeqDataSet object and call it dds, short for our DESeqDataSet. If you get a warning about “some variables in design formula are characters, converting to factors” don’t worry about it. Take a look at the dds object once you create it.
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+
+
+```
+
+```{r}
+dds <- DESeq(dds)
+```
+
+Get the results
+```{r}
+res <- results(dds)
+res
+```
+
+```{r}
+summary(res)
+```
+
+Plot a Volcano Plot
+```{r}
+# Add some color
+mycols <- rep("gray", nrow(res))
+
+# make points with +2 -2 fild change clue
+mycols [(res$log2FoldChange) > 2] <- "blue"
+mycols [(res$log2FoldChange) < (-2)] <- "blue"
+
+# make points below p-value cutoff red
+mycols[ (res$padj > 0.05)] <- "red"
+
+plot(res$log2FoldChange, -log(res$padj), col=mycols)
+abline(v=c(-2,2), col="gray",lty=2)
+abline(h=-log(0.05), col="gray", lty =2)
+```
+
+Save our results for next day...
+```{r}
+write.csv(res, file="expression_results.csv")
+```
+
